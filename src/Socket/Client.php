@@ -7,13 +7,36 @@ use Peek\Probe\Settings\Configuration;
 class Client
 {
 
+    public $client;
     public $configuration = null;
+    /**
+     * __construct
+     *
+     * @param  mixed $_configuration
+     * @return void
+     */
     public function __construct(Configuration $_configuration)
     {
         $this->configuration = $_configuration;
     }
+
+    public function __destruct()
+    {
+        if ($this->client) {
+            curl_close($this->client);
+            $this->client = null;
+        }
+    }
+    /**
+     * sendRequest
+     *
+     * @param  mixed $message
+     * @return void
+     */
     public function sendRequest($message)
     {
+
+
         $data = "";
         if (is_array($message)) {
             $data = json_encode($message);
@@ -29,23 +52,32 @@ class Client
         }
 
 
-        $client = $this->getClient(true, 2);
+        $this->getClient(true, 2);
 
-        if ($this->isServerOn()) {
-            if ($client) {
-                curl_setopt($client, CURLOPT_POSTFIELDS, $data);
-                $response = curl_exec($client);
-                if (curl_errno($client)) {
-                    echo 'Error:' . curl_error($client);
-                } else {
-                    echo "Response from server: $response\n";
-                }
+        if (!$this->isServerOn()) {
+            return;
+        }
+        if ($this->client) {
+            curl_setopt($this->client, CURLOPT_POSTFIELDS, $data);
+            $response = curl_exec($this->client);
+            if (curl_errno($this->client)) {
+                echo 'Error:' . curl_error($this->client);
+            } else {
+                echo "Response from server: $response\n";
             }
         }
     }
 
 
-    public function getClient($isPost = true, $timeout = 5)
+
+    /**
+     * getClient
+     *
+     * @param  mixed $isPost
+     * @param  mixed $timeout
+     * @return void
+     */
+    public function getClient(bool $isPost = true, $timeout = 5)
     {
         $host  = $this->configuration->_get('host');
         $port  = $this->configuration->_get('port');
@@ -65,20 +97,23 @@ class Client
         if ($isPost) {
             curl_setopt($client, CURLOPT_POST, true);
         }
-        return $client;
+        $this->client =  $client;
     }
 
-    public function isServerOn()
+    /**
+     * isServerOn
+     *
+     * @return bool
+     */
+    public function isServerOn(): bool
     {
-        $ch = $this->getClient(false, 2);
-        $response = curl_exec($ch);
-        $error = curl_errno($ch);
-        curl_close($ch);
-
-        if ($error == 0) {
-            return true; // Port is open
-        } else {
-            return false; // Port is closed or unreachable
+        try {
+            $this->getClient(false, 2);
+            $response = curl_exec($this->client);
+            $isOn = !(curl_errno($this->client) === CURLE_HTTP_NOT_FOUND);
+            curl_close($this->client);
+        } finally {
+            return $isOn ?? false;
         }
     }
 }
