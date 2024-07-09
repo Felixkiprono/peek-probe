@@ -1,5 +1,5 @@
 {
-    "name": "sergeikiprono/peek-probe",
+    "name": "celestialcodex/peek-probe",
     "description": "Peek and Debug in a more friendly way",
     "keywords": [
         "php",
@@ -9,7 +9,7 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "seregei",
+            "name": "celestialcodex",
             "email": "felixkiptor@gmail.com"
         }
     ],

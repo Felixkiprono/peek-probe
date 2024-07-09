@@ -11,7 +11,7 @@ class Configuration
     protected $defaultConfigs = [
         'enable' => true,
         'host' => 'localhost',
-        'port' => 9008
+        'port' => 9009
     ];
 
     /**
